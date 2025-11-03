@@ -1,0 +1,77 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.example.ffmpegbatch'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.example.ffmpegbatch'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1.0'
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable true
+        }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.14'
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}']
+        }
+    }
+
+    // Task hook: ensure ffmpeg binary assets exist before mergeAssets
+    applicationVariants.all { variant ->
+        def ensureFfmpeg = tasks.register("ensureFfmpeg${variant.name.capitalize()}") {
+            doLast {
+                def abiDir = file("${projectDir}/src/main/assets/ffmpeg/arm64-v8a")
+                if (!abiDir.exists()) {
+                    throw new GradleException("Missing ffmpeg assets. Run scripts/build_ffmpeg_android.sh first or rely on CI to build.")
+                }
+                def bin = file("${abiDir}/ffmpeg")
+                if (!bin.exists()) {
+                    throw new GradleException("ffmpeg binary not found in ${abiDir}")
+                }
+            }
+        }
+        def mergeAssetsTask = tasks.findByName("merge${variant.name.capitalize()}Assets")
+        if (mergeAssetsTask != null) {
+            mergeAssetsTask.dependsOn(ensureFfmpeg)
+        }
+    }
+}
+
+dependencies {
+    implementation platform('androidx.compose:compose-bom:2024.06.00')
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.activity:activity-compose:1.9.2'
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.material3:material3:1.3.0'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.runtime:runtime-livedata'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.4'
+    implementation 'androidx.datastore:datastore-preferences:1.1.1'
+    implementation 'androidx.work:work-runtime-ktx:2.9.1'
+}

@@ -1,0 +1,67 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      ANDROID_HOME: ${{ github.workspace }}/android-sdk
+      ANDROID_NDK_HOME: ${{ github.workspace }}/android-sdk/ndk/26.3.11579264
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build cmake make curl unzip zip git
+
+      - name: Set up Android SDK
+        run: |
+          mkdir -p "$ANDROID_SDK_ROOT"
+          curl -sSL -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          unzip -q cmdline-tools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"
+          mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "ndk;26.3.11579264"
+
+      - name: Install Gradle and generate wrapper
+        run: |
+          curl -sSL -o gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle.zip -d $HOME/gradle
+          export PATH="$HOME/gradle/gradle-8.7/bin:$PATH"
+          gradle -v
+          gradle wrapper --gradle-version 8.7
+
+      - name: Build FFmpeg (arm64-v8a)
+        run: |
+          export ANDROID_NDK_HOME="$ANDROID_NDK_HOME"
+          bash scripts/build_ffmpeg_android.sh
+
+      - name: Build Debug APK
+        run: |
+          export ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT"
+          export ANDROID_HOME="$ANDROID_HOME"
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
