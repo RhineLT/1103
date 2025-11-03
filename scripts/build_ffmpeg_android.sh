@@ -84,6 +84,12 @@ export PKG_CONFIG_LIBDIR="${X265_PREFIX}/lib/pkgconfig"
 # Verify x265.pc is available
 echo "==> PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
 ls -lh "${X265_PREFIX}/lib/pkgconfig/"
+cat "${X265_PREFIX}/lib/pkgconfig/x265.pc"
+echo "==> Testing pkg-config"
+pkg-config --exists --print-errors x265 && echo "x265 found!" || echo "x265 NOT found"
+pkg-config --modversion x265 || true
+pkg-config --cflags x265 || true
+pkg-config --libs x265 || true
 
 # Configure for Android arm64
 ./configure \
