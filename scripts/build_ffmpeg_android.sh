@@ -52,7 +52,7 @@ if [[ ! -d "$SRC_DIR/x265" ]]; then
   tar -xzf x265.tar.gz --strip-components=1 -C x265
 fi
 
-# Build x265 (8-bit only)
+# Build x265 (8-bit only, library only)
 echo "==> Building x265 for arm64-v8a"
 mkdir -p "$BUILD_DIR/x265"
 cd "$BUILD_DIR/x265"
@@ -75,13 +75,10 @@ cmake --install .
 
 cd "$SRC_DIR/ffmpeg"
 
-# Clean previous if configured before
-if [[ -f Makefile ]]; then
-  make distclean || true
-fi
+# Clean previous
+make distclean || true
 
-# Ensure pkg-config can find x265 without failing on unset vars
-export PKG_CONFIG_PATH="${X265_PREFIX}/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+PKG_CONFIG_PATH="${X265_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
 
 # Configure for Android arm64
 ./configure \
@@ -99,11 +96,11 @@ export PKG_CONFIG_PATH="${X265_PREFIX}/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CON
   --disable-shared \
   --disable-debug \
   --disable-doc \
+  --enable-programs \
   --enable-gpl \
   --enable-libx265 \
-  --pkg-config-flags="--static" \
   --extra-cflags="-I${X265_PREFIX}/include" \
-  --extra-ldflags="-L${X265_PREFIX}/lib -pthread"
+  --extra-ldflags="-L${X265_PREFIX}/lib"
 
 make -j"$(nproc)"
 
