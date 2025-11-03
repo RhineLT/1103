@@ -76,9 +76,9 @@ cmake --install .
 cd "$SRC_DIR/ffmpeg"
 
 # Clean previous
-make distclean || true
+make distclean 2>/dev/null || true
 
-PKG_CONFIG_PATH="${X265_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PKG_CONFIG_PATH="${X265_PREFIX}/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 
 # Configure for Android arm64
 ./configure \
