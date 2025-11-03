@@ -96,7 +96,6 @@ export PKG_CONFIG_PATH="${X265_PREFIX}/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CON
   --disable-shared \
   --disable-debug \
   --disable-doc \
-  --enable-programs \
   --enable-gpl \
   --enable-libx265 \
   --extra-cflags="-I${X265_PREFIX}/include" \
