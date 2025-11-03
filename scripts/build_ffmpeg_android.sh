@@ -79,6 +79,11 @@ cd "$SRC_DIR/ffmpeg"
 make distclean 2>/dev/null || true
 
 export PKG_CONFIG_PATH="${X265_PREFIX}/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+export PKG_CONFIG_LIBDIR="${X265_PREFIX}/lib/pkgconfig"
+
+# Verify x265.pc is available
+echo "==> PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
+ls -lh "${X265_PREFIX}/lib/pkgconfig/"
 
 # Configure for Android arm64
 ./configure \
