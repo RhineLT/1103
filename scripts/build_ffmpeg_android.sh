@@ -63,6 +63,7 @@ cmake "$SRC_DIR/x265/source" \
   -DANDROID_PLATFORM=21 \
   -DENABLE_SHARED=OFF \
   -DENABLE_ASSEMBLY=OFF \
+  -DENABLE_CLI=OFF \
   -DENABLE_PIC=ON \
   -DHIGH_BIT_DEPTH=OFF \
   -DEXPORT_C_API=ON \
@@ -98,8 +99,9 @@ PKG_CONFIG_PATH="${X265_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
   --enable-programs \
   --enable-gpl \
   --enable-libx265 \
+  --pkg-config-flags="--static" \
   --extra-cflags="-I${X265_PREFIX}/include" \
-  --extra-ldflags="-L${X265_PREFIX}/lib"
+  --extra-ldflags="-L${X265_PREFIX}/lib -pthread"
 
 make -j"$(nproc)"
 
